@@ -10,7 +10,7 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name, phone } = req.body;
 
-    // Validasi input
+    // Validasi Input
     if (!email || !password || !name) {
       return res.status(400).json({ error: "Semua field tidak boleh kosong." });
     }
@@ -21,7 +21,7 @@ export const register = async (req: Request, res: Response) => {
         .json({ message: "Passwordnya minimal harus ada 8 karakter." });
     }
 
-    // Cek apakah user sudah ada
+    // Cek Apakah User Sudah Ada
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -32,10 +32,10 @@ export const register = async (req: Request, res: Response) => {
         .json({ error: "Pengguna dengan email ini sudah terdaftar." });
     }
 
-    // Hash password
+    // Hash Password
     const hashedPassword = await hashPassword(password);
 
-    // Buat user baru
+    // Buat User Baru
     const user = await prisma.user.create({
       data: {
         email,
@@ -80,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
         .json({ error: "Email dan password tidak boleh kosong." });
     }
 
-    // Cari user
+    // Cari User
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -91,7 +91,7 @@ export const login = async (req: Request, res: Response) => {
         .json({ error: "Email atau password tidak valid." });
     }
 
-    // Verifikasi password
+    // Verifikasi Password
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
@@ -100,7 +100,7 @@ export const login = async (req: Request, res: Response) => {
         .json({ error: "Email atau password tidak valid." });
     }
 
-    // Generate token
+    // Generate Token
     const token = generateToken(user.id, user.role);
 
     res.status(200).json({
@@ -130,7 +130,7 @@ export const getMe = async (req: Request, res: Response) => {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: String(userId) },
       select: {
         id: true,
         email: true,
@@ -174,12 +174,12 @@ export const forgotPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Email tidak boleh kosong." });
     }
 
-    // Cari user berdasarkan email
+    // Cari User Berdasarkan Email
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    // Untuk keamanan, tetap beri response sukses meskipun email tidak ditemukan
+    // Untuk Keamanan, Tetap Beri Response Sukses Meskipun Email Tidak Ditemukan
     if (!user) {
       return res.status(200).json({
         message:
@@ -187,16 +187,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
       });
     }
 
-    // Generate reset token
+    // Generate Reset Token
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetTokenHash = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
-    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 jam
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
-    // Simpan token ke database
+    // Simpan Token ke Database
     await prisma.user.update({
       where: { email },
       data: {
@@ -205,7 +205,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       },
     });
 
-    // Kirim email
+    // Kirim Email
     try {
       await sendResetPasswordEmail(email, resetToken);
     } catch (emailError) {
@@ -242,10 +242,10 @@ export const resetPassword = async (req: Request, res: Response) => {
         .json({ error: "Passwordnya minimal harus ada 8 karakter." });
     }
 
-    // Hash token untuk dicocokkan dengan database
+    // Hash Token Untuk Dicocokkan Dengan Database
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Cari user dengan token yang valid dan belum expired
+    // Cari User Dengan Token yang Valid dan Belum Expired
     const user = await prisma.user.findFirst({
       where: {
         resetPasswordToken: hashedToken,
@@ -261,10 +261,10 @@ export const resetPassword = async (req: Request, res: Response) => {
       });
     }
 
-    // Hash password baru
+    // Hash Password Baru
     const hashedPassword = await hashPassword(newPassword);
 
-    // Update password dan hapus token
+    // Update Password dan Hapus Token
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -302,7 +302,7 @@ export const changePassword = async (req: Request, res: Response) => {
       });
     }
 
-    // Cari user
+    // Cari User
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -311,7 +311,7 @@ export const changePassword = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Pengguna tidak ditemukan." });
     }
 
-    // Verifikasi current password
+    // Verifikasi Current Password
     const isPasswordValid = await comparePassword(
       currentPassword,
       user.password,
@@ -320,10 +320,10 @@ export const changePassword = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Password saat ini salah." });
     }
 
-    // Hash password baru
+    // Hash Password Baru
     const hashedPassword = await hashPassword(newPassword);
 
-    // Update password
+    // Update Password
     await prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },

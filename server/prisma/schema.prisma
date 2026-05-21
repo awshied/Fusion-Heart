@@ -29,6 +29,8 @@ enum Genre {
   ROMANCE
   MYSTERY
   PSYCOLOGY
+  FANTASY
+  MATURE
 }
 
 enum BeverageCategory {

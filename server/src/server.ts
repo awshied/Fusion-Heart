@@ -9,6 +9,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import authRoutes from "./routes/auth.route";
+import storeRoutes from "./routes/store.route";
+import bookRoutes from "./routes/book.route";
+import beverageRoutes from "./routes/beverage.route";
+import tableRoutes from "./routes/table.route";
 
 const app = express();
 const limiter = rateLimit({
@@ -35,6 +39,10 @@ app.use(morgan("dev"));
 app.use("/api", limiter);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/stores", storeRoutes);
+app.use("/api/books", bookRoutes);
+app.use("/api/beverages", beverageRoutes);
+app.use("/api/tables", tableRoutes);
 
 app.get("/api/heart", (req, res) => {
   res.status(200).json({
