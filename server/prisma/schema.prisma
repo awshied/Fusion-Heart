@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,276 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // url       = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  DRIVER
+  CUSTOMER
+}
+
+enum BookCategory {
+  NOVEL
+  COMIC
+}
+
+enum Genre {
+  HORROR
+  COMEDY
+  ACTION
+  GORE
+  SLICE_OF_LIFE
+  ROMANCE
+  MYSTERY
+  PSYCOLOGY
+}
+
+enum BeverageCategory {
+  COFFEE
+  JUICE
+  MILKSHAKE
+  MINERAL
+}
+
+enum OrderType {
+  DELIVERY
+  PICKUP
+}
+
+enum PaymentMethod {
+  TRANSFER
+  COD
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+}
+
+enum OrderStatus {
+  PENDING
+  ASSIGNED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum ItemType {
+  BOOK
+  BEVERAGE
+}
+
+enum TargetType {
+  DRIVER
+  BOOK
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  resetPasswordToken   String?   @unique
+  resetPasswordExpires DateTime?
+
+  customerOrders Order[]    @relation("CustomerOrders")
+  driverOrders   Order[]    @relation("DriverOrders")
+  reviews        Review[]
+  wishlist       Wishlist[]
+  tableBookings  TableBooking[]
+
+  @@map("users")
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  lat       Float
+  lng       Float
+  city      String
+  province  String
+  createdAt DateTime @default(now())
+
+  books   BookStock[]
+  tables  Table[]
+  orders  Order[]
+
+  @@map("stores")
+}
+
+model Book {
+  id          String   @id @default(uuid())
+  title       String
+  author      String
+  description String?
+  price       Float
+  coverImage  String
+  category    BookCategory
+  genre       Genre
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stocks        BookStock[]
+  reviews       Review[]
+  wishlistItems Wishlist[]
+
+  @@map("books")
+}
+
+model BookStock {
+  id      String @id @default(uuid())
+  bookId  String
+  storeId String
+  stock   Int    @default(0)
+
+  book  Book  @relation(fields: [bookId], references: [id])
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([bookId, storeId])
+  @@map("book_stocks")
+}
+
+model Beverage {
+  id          String          @id @default(uuid())
+  name        String
+  price       Float
+  category    BeverageCategory
+  image       String?
+  isAvailable Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+
+  @@map("beverages")
+}
+
+model Table {
+  id        String   @id @default(uuid())
+  storeId   String
+  tableNumber String
+  capacity  Int
+  isAvailable Boolean @default(true)
+
+  store   Store          @relation(fields: [storeId], references: [id])
+  bookings TableBooking[]
+
+  @@map("tables")
+}
+
+model TableBooking {
+  id          String   @id @default(uuid())
+  tableId     String
+  customerId  String
+  bookingDate DateTime
+  duration    Int
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  table    Table @relation(fields: [tableId], references: [id])
+  customer User  @relation(fields: [customerId], references: [id])
+
+  @@map("table_bookings")
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  invoiceNumber   String        @unique
+  customerId      String
+  storeId         String?
+  driverId        String?
+  orderType       OrderType
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(UNPAID)
+  orderStatus     OrderStatus   @default(PENDING)
+  subtotal        Float
+  deliveryFee     Float         @default(0)
+  discount        Float         @default(0)
+  total           Float
+  promoCode       String?
+  notes           String?
+  customerLat     Float?
+  customerLng     Float?
+  customerAddress String?
+  driverLat       Float?
+  driverLng       Float?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  customer User          @relation("CustomerOrders", fields: [customerId], references: [id])
+  store    Store?        @relation(fields: [storeId], references: [id])
+  driver   User?         @relation("DriverOrders", fields: [driverId], references: [id])
+  items    OrderItem[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  itemType  ItemType
+  itemId    String
+  name      String
+  price     Float
+  quantity  Int
+  subtotal  Float
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("order_items")
+}
+
+model Review {
+  id         String     @id @default(uuid())
+  rating     Int
+  comment    String?
+  targetType TargetType
+  targetId   String
+  customerId String
+  createdAt  DateTime   @default(now())
+
+  customer User @relation(fields: [customerId], references: [id])
+  book      Book? @relation(fields: [targetId], references: [id], map: "review_book_fk")
+
+  @@map("reviews")
+}
+
+model Wishlist {
+  id         String @id @default(uuid())
+  customerId String
+  bookId     String
+
+  customer User @relation(fields: [customerId], references: [id])
+  book     Book @relation(fields: [bookId], references: [id])
+
+  @@unique([customerId, bookId])
+  @@map("wishlists")
+}
+
+model Promo {
+  id           String       @id @default(uuid())
+  code         String       @unique
+  description  String?
+  discountType DiscountType
+  discountValue Float
+  minPurchase  Float?
+  maxDiscount  Float?
+  validFrom    DateTime
+  validUntil   DateTime
+  usageLimit   Int?
+  usageCount   Int          @default(0)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  @@map("promos")
 }
