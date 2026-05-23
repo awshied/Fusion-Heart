@@ -96,6 +96,7 @@ model User {
   reviews        Review[]
   wishlist       Wishlist[]
   tableBookings  TableBooking[]
+  cart           Cart[]
 
   @@map("users")
 }
@@ -113,6 +114,7 @@ model Store {
   books   BookStock[]
   tables  Table[]
   orders  Order[]
+  cart    Cart[]
 
   @@map("stores")
 }
@@ -168,7 +170,7 @@ model Table {
   capacity  Int
   isAvailable Boolean @default(true)
 
-  store   Store          @relation(fields: [storeId], references: [id])
+  store    Store          @relation(fields: [storeId], references: [id])
   bookings TableBooking[]
 
   @@map("tables")
@@ -178,6 +180,7 @@ model TableBooking {
   id          String   @id @default(uuid())
   tableId     String
   customerId  String
+  orderId     String?  @unique
   bookingDate DateTime
   duration    Int
   status      String   @default("PENDING")
@@ -185,8 +188,45 @@ model TableBooking {
 
   table    Table @relation(fields: [tableId], references: [id])
   customer User  @relation(fields: [customerId], references: [id])
+  order    Order[]
 
   @@map("table_bookings")
+}
+
+model Cart {
+  id         String      @id @default(uuid())
+  customerId String?     
+  sessionId  String?     @unique 
+  storeId    String?               
+  expiresAt  DateTime              
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  customer   User?       @relation(fields: [customerId], references: [id])
+  store      Store?      @relation(fields: [storeId], references: [id])
+  items      CartItem[]
+
+  @@unique([customerId, sessionId])
+  @@index([customerId])
+  @@index([sessionId])
+  @@map("carts")
+}
+
+model CartItem {
+  id         String   @id @default(uuid())
+  cartId     String
+  itemType   ItemType  
+  itemId     String    
+  name       String    
+  price      Float     
+  quantity   Int       @default(1)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  cart       Cart     @relation(fields: [cartId], references: [id])
+
+  @@unique([cartId, itemType, itemId]) 
+  @@map("cart_items")
 }
 
 model Order {
@@ -195,6 +235,7 @@ model Order {
   customerId      String
   storeId         String?
   driverId        String?
+  tableBookingId  String?       @unique
   orderType       OrderType
   paymentMethod   PaymentMethod
   paymentStatus   PaymentStatus @default(UNPAID)
@@ -213,10 +254,11 @@ model Order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  customer User          @relation("CustomerOrders", fields: [customerId], references: [id])
-  store    Store?        @relation(fields: [storeId], references: [id])
-  driver   User?         @relation("DriverOrders", fields: [driverId], references: [id])
-  items    OrderItem[]
+  customer     User          @relation("CustomerOrders", fields: [customerId], references: [id])
+  store        Store?        @relation(fields: [storeId], references: [id])
+  driver       User?         @relation("DriverOrders", fields: [driverId], references: [id])
+  items        OrderItem[]
+  tableBooking TableBooking? @relation(fields: [tableBookingId], references: [id])
   
   @@map("orders")
 }
@@ -245,7 +287,7 @@ model Review {
   customerId String
   createdAt  DateTime   @default(now())
 
-  customer User @relation(fields: [customerId], references: [id])
+  customer  User @relation(fields: [customerId], references: [id])
   book      Book? @relation(fields: [targetId], references: [id], map: "review_book_fk")
 
   @@map("reviews")

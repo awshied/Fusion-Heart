@@ -8,11 +8,18 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+import prisma from "./lib/database";
 import authRoutes from "./routes/auth.route";
+import adminRoutes from "./routes/admin.route";
+import driverRoutes from "./routes/driver.route";
 import storeRoutes from "./routes/store.route";
 import bookRoutes from "./routes/book.route";
 import beverageRoutes from "./routes/beverage.route";
 import tableRoutes from "./routes/table.route";
+import wishlistRoutes from "./routes/wishlist.route";
+import cartRoutes from "./routes/cart.route";
+import reviewRoutes from "./routes/review.route";
+import orderRoutes from "./routes/order.route";
 
 const app = express();
 const limiter = rateLimit({
@@ -39,10 +46,16 @@ app.use(morgan("dev"));
 app.use("/api", limiter);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/driver", driverRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/beverages", beverageRoutes);
 app.use("/api/tables", tableRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.get("/api/heart", (req, res) => {
   res.status(200).json({
@@ -72,16 +85,21 @@ app.use(
 
 const PORT = process.env.PORT || 3000;
 
-const startServer = () => {
+const startServer = async () => {
   try {
+    await prisma.$connect();
+    await prisma.$queryRaw`SELECT 1`;
+
     app.listen(PORT, () => {
-      console.log(`🚀 Fusion Heart Server is running!`);
-      console.log(`📡 API URL: http://localhost: ${PORT}`);
-      console.log(`❤️  Health check: http://localhost:${PORT}/heart`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(
+        `✔️  Yeay, server Fusion Heart dapat berjalan di port: ${PORT}`,
+      );
+      console.log(
+        `✅ Supabase berhasil terkonseksi: ${process.env.DIRECT_URL}`,
+      );
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error("❌ Gagal menjalankan server:", error);
     process.exit(1);
   }
 };
