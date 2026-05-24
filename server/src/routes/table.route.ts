@@ -6,12 +6,16 @@ import {
   getTablesByStore,
   updateTable,
 } from "../controllers/table.controller";
-import { authenticate, authorize } from "../middlewares/auth.middleware";
+import {
+  authenticate,
+  authenticateOptional,
+  authorize,
+} from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.get("/store/:storeId", getTablesByStore);
-router.get("/:id", getTableById);
+router.get("/store/:storeId", authenticateOptional, getTablesByStore);
+router.get("/:id", authenticateOptional, getTableById);
 
 router.post("/", authenticate, authorize("ADMIN"), createTable);
 router.put("/:id", authenticate, authorize("ADMIN"), updateTable);

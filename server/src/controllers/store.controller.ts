@@ -259,7 +259,7 @@ export const getNearestStores = async (req: Request, res: Response) => {
     const { lat, lng, limit = "10" } = req.query;
 
     if (!lat || !lng) {
-      return res.status(400).json({ error: "lat and lng are required" });
+      return res.status(400).json({ error: "Garis bujur dan garis lintang tidak boleh kosong." });
     }
 
     const customerLat = typeof lat === "string" ? parseFloat(lat) : Number(lat);

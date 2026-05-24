@@ -7,61 +7,85 @@ const getOrCreateCart = async (
   customerId: string | null,
   sessionId: string | null,
 ) => {
+  console.log("🔍 getOrCreateCart dipanggil dengan:", {
+    customerId,
+    sessionId,
+  });
+
   let cart = null;
 
+  // Cari Berdasarkan customerId (Jika Login)
   if (customerId) {
-    // Cari Keranjang untuk Pelanggan yang Login
     cart = await prisma.cart.findFirst({
       where: { customerId },
       include: { items: true },
     });
 
-    // Jika Pelanggan Login dan Memiliki Sesi Sebagai Tamu, Maka Keranjang Digabungkan
-    if (sessionId && !cart) {
-      const guestCart = await prisma.cart.findFirst({
-        where: { sessionId },
-        include: { items: true },
-      });
-
-      if (guestCart) {
-        // Transfer Isi Keranjang bagi Sesi Tamu ke Dalam Keranjang Pelanggan yang Sudah Login
-        cart = await prisma.$transaction(async (tx) => {
-          // Perbarui Keranjang Tamu Menjadi Keranjang Pengguna
-          const updatedCart = await tx.cart.update({
-            where: { id: guestCart.id },
-            data: {
-              customerId,
-              sessionId: null,
-              expiresAt: getCartExpiration(),
-            },
-            include: { items: true },
-          });
-
-          return updatedCart;
-        });
-      }
+    if (cart) {
+      console.log(
+        `Menemukan keranjang untuk customer ${customerId}: ${cart.id}.`,
+      );
+      return cart;
     }
   }
 
-  if (!cart && sessionId) {
+  // Cari Berdasarkan sessionId (Jika Tamu)
+  if (sessionId && !cart && !customerId) {
     cart = await prisma.cart.findFirst({
       where: { sessionId },
       include: { items: true },
     });
+
+    if (cart) {
+      console.log(
+        `Menemukan keranjang untuk session ${sessionId}: ${cart.id}.`,
+      );
+      return cart;
+    }
   }
 
-  // Jika Masih Belum Ada Keranjang, Buat Baru
-  if (!cart) {
-    cart = await prisma.cart.create({
-      data: {
-        customerId: customerId || null,
-        sessionId: sessionId || (customerId ? null : generateSessionId()),
-        expiresAt: getCartExpiration(),
-      },
+  // Jika Ada customerId tapi Belum Punya Keranjang, Cek Apakah Ada Keranjang Tamu yang Bisa Digabung
+  if (customerId && sessionId && !cart) {
+    const guestCart = await prisma.cart.findFirst({
+      where: { sessionId },
       include: { items: true },
     });
+
+    if (guestCart && guestCart.items.length > 0) {
+      console.log(
+        `Memindahkan guest cart ${guestCart.id} ke customer ${customerId}.`,
+      );
+
+      cart = await prisma.$transaction(async (tx) => {
+        // Perbarui Keranjang jadi Milik Customer
+        const updatedCart = await tx.cart.update({
+          where: { id: guestCart.id },
+          data: {
+            customerId,
+            sessionId: null,
+            expiresAt: getCartExpiration(),
+          },
+          include: { items: true },
+        });
+        return updatedCart;
+      });
+
+      return cart;
+    }
   }
 
+  // Buat Keranjang Baru
+  console.log("🆕 Buat keranjang baru.");
+  cart = await prisma.cart.create({
+    data: {
+      customerId: customerId || null,
+      sessionId: customerId ? null : sessionId || generateSessionId(),
+      expiresAt: getCartExpiration(),
+    },
+    include: { items: true },
+  });
+
+  console.log(`Keranjang baru telah dibuat: ${cart.id}.`);
   return cart;
 };
 
@@ -70,6 +94,8 @@ export const getMyCart = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
     const sessionId = req.headers["x-session-id"] as string;
+
+    console.log("📦 GET /cart - userId:", userId, "sessionId:", sessionId);
 
     const cart = await getOrCreateCart(userId || null, sessionId || null);
 
@@ -99,7 +125,12 @@ export const getMyCart = async (req: Request, res: Response) => {
         }
 
         return {
-          ...item,
+          id: item.id,
+          itemType: item.itemType,
+          itemId: item.itemId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
           isAvailable,
           availableStock,
         };
@@ -128,6 +159,9 @@ export const addToCart = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user?.userId;
     const sessionId = req.headers["x-session-id"] as string;
+
+    console.log("➕ POST /cart/add - userId:", userId, "sessionId:", sessionId);
+
     const { itemType, itemId, quantity, storeId } = req.body;
 
     if (!itemType || !itemId || !quantity || !storeId) {

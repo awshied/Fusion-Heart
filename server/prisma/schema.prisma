@@ -230,29 +230,30 @@ model CartItem {
 }
 
 model Order {
-  id              String        @id @default(uuid())
-  invoiceNumber   String        @unique
-  customerId      String
-  storeId         String?
-  driverId        String?
-  tableBookingId  String?       @unique
-  orderType       OrderType
-  paymentMethod   PaymentMethod
-  paymentStatus   PaymentStatus @default(UNPAID)
-  orderStatus     OrderStatus   @default(PENDING)
-  subtotal        Float
-  deliveryFee     Float         @default(0)
-  discount        Float         @default(0)
-  total           Float
-  promoCode       String?
-  notes           String?
-  customerLat     Float?
-  customerLng     Float?
-  customerAddress String?
-  driverLat       Float?
-  driverLng       Float?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                String        @id @default(uuid())
+  invoiceNumber     String        @unique
+  customerId        String
+  storeId           String?
+  driverId          String?
+  tableBookingId    String?       @unique
+  orderType         OrderType
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus @default(UNPAID)
+  paymentIntentId   String?       @unique
+  orderStatus       OrderStatus   @default(PENDING)
+  subtotal          Float
+  deliveryFee       Float         @default(0)
+  discount          Float         @default(0)
+  total             Float
+  promoCode         String?
+  notes             String?
+  customerLat       Float?
+  customerLng       Float?
+  customerAddress   String?
+  driverLat         Float?
+  driverLng         Float?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   customer     User          @relation("CustomerOrders", fields: [customerId], references: [id])
   store        Store?        @relation(fields: [storeId], references: [id])

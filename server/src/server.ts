@@ -5,10 +5,13 @@ import morgan from "morgan";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import http from "http";
 
 dotenv.config();
 
 import prisma from "./lib/database";
+import { setupSocketIO } from "./lib/socket";
+
 import authRoutes from "./routes/auth.route";
 import adminRoutes from "./routes/admin.route";
 import driverRoutes from "./routes/driver.route";
@@ -20,6 +23,8 @@ import wishlistRoutes from "./routes/wishlist.route";
 import cartRoutes from "./routes/cart.route";
 import reviewRoutes from "./routes/review.route";
 import orderRoutes from "./routes/order.route";
+import promoRoutes from "./routes/promo.route";
+import paymentRoutes from "./routes/payment.route";
 
 const app = express();
 const limiter = rateLimit({
@@ -45,6 +50,8 @@ app.use(morgan("dev"));
 
 app.use("/api", limiter);
 
+app.use("/api/payments", paymentRoutes);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/driver", driverRoutes);
@@ -56,6 +63,7 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/promos", promoRoutes);
 
 app.get("/api/heart", (req, res) => {
   res.status(200).json({
@@ -90,13 +98,33 @@ const startServer = async () => {
     await prisma.$connect();
     await prisma.$queryRaw`SELECT 1`;
 
-    app.listen(PORT, () => {
+    const server = http.createServer(app);
+    const io = setupSocketIO(server);
+
+    server.listen(PORT, () => {
       console.log(
         `✔️  Yeay, server Fusion Heart dapat berjalan di port: ${PORT}`,
       );
       console.log(
         `✅ Supabase berhasil terkonseksi: ${process.env.DIRECT_URL}`,
       );
+    });
+
+    process.on("SIGINT", () => {
+      console.log("Mematikan server...");
+      server.close(() => {
+        console.log("Server ditutup.");
+        prisma
+          .$disconnect()
+          .then(() => {
+            console.log("Database terputus.");
+            process.exit(0);
+          })
+          .catch((err) => {
+            console.error("Gagal memutuskan database:", err);
+            process.exit(1);
+          });
+      });
     });
   } catch (error) {
     console.error("❌ Gagal menjalankan server:", error);

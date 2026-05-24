@@ -8,12 +8,16 @@ import {
   updateBook,
   updateBookStock,
 } from "../controllers/book.controller";
-import { authenticate, authorize } from "../middlewares/auth.middleware";
+import {
+  authenticate,
+  authenticateOptional,
+  authorize,
+} from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.get("/", getAllBooks);
-router.get("/:id", getBookById);
+router.get("/", authenticateOptional, getAllBooks);
+router.get("/:id", authenticateOptional, getBookById);
 
 router.post("/", authenticate, authorize("ADMIN"), createBook);
 router.put("/:id", authenticate, authorize("ADMIN"), updateBook);

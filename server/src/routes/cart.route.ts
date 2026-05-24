@@ -7,8 +7,11 @@ import {
   selectStore,
   updateCartItem,
 } from "../controllers/cart.controller";
+import { authenticateOptional } from "../middlewares/auth.middleware";
 
 const router = Router();
+
+router.use(authenticateOptional);
 
 router.get("/", getMyCart);
 router.post("/select-store", selectStore);

@@ -7,13 +7,17 @@ import {
   getStoreById,
   updateStore,
 } from "../controllers/store.controller";
-import { authenticate, authorize } from "../middlewares/auth.middleware";
+import {
+  authenticate,
+  authenticateOptional,
+  authorize,
+} from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.get("/", getAllStores);
-router.get("/nearest", getNearestStores);
-router.get("/:id", getStoreById);
+router.get("/", authenticateOptional, getAllStores);
+router.get("/nearest", authenticateOptional, getNearestStores);
+router.get("/:id", authenticateOptional, getStoreById);
 
 router.post("/", authenticate, authorize("ADMIN"), createStore);
 router.put("/:id", authenticate, authorize("ADMIN"), updateStore);

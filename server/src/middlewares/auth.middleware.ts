@@ -29,6 +29,30 @@ export const authenticate = (
   }
 };
 
+export const authenticateOptional = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      const decoded = verifyToken(token);
+
+      if (decoded && decoded.userId) {
+        (req as any).user = decoded;
+        console.log(`Pengguna ${decoded.userId} telah terautentikasi.`);
+      }
+    }
+
+    next();
+  } catch (error) {
+    next();
+  }
+};
+
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const userRole = (req as any).user?.role;

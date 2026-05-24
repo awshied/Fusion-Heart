@@ -12,7 +12,7 @@ const router = Router();
 
 router.use(authenticate);
 
-router.post("/", checkoutFromCart);
+router.post("/checkout", checkoutFromCart);
 router.get("/my-orders", getMyOrders);
 router.get("/:id", getOrderById);
 router.post("/:id/cancel", cancelOrder);
