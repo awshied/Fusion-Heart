@@ -5,7 +5,6 @@ import {
   checkoutFromCart,
   getMyOrders,
   getOrderById,
-  simulatePayment,
 } from "../controllers/order.controller";
 
 const router = Router();
@@ -16,6 +15,5 @@ router.post("/checkout", checkoutFromCart);
 router.get("/my-orders", getMyOrders);
 router.get("/:id", getOrderById);
 router.post("/:id/cancel", cancelOrder);
-router.post("/:id/pay", simulatePayment);
 
 export default router;

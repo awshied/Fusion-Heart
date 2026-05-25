@@ -85,6 +85,7 @@ model User {
   password  String
   name      String
   phone     String?
+  avatar    String?
   role      Role     @default(CUSTOMER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,12 +94,42 @@ model User {
 
   customerOrders Order[]    @relation("CustomerOrders")
   driverOrders   Order[]    @relation("DriverOrders")
+  userActivity   UserActivity[]
   reviews        Review[]
   wishlist       Wishlist[]
   tableBookings  TableBooking[]
   cart           Cart[]
+  notification   Notification[]
 
   @@map("users")
+}
+
+model UserActivity {
+  id         String   @id @default(uuid())
+  userId     String
+  action     String
+  metadata   Json?    
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("user_activities")
+}
+
+model CustomerSegment {
+  id          String   @id @default(uuid())
+  name        String   @unique 
+  description String?
+  conditions  Json?             
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("customer_segments")
 }
 
 model Store {
@@ -322,4 +353,21 @@ model Promo {
   createdAt    DateTime     @default(now())
 
   @@map("promos")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  title      String
+  message    String
+  type       String  
+  isRead     Boolean  @default(false)
+  metadata   Json? 
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notifications")
 }

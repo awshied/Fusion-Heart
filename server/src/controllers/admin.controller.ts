@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../lib/database";
 import { hashPassword } from "../lib/hash.utils";
+import { sendOrderStatusUpdateEmail } from "../lib/email";
 
 // Helper: Validasi ID
 const getStringParam = (
@@ -463,10 +464,34 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       data: { orderStatus: orderStatus as any },
     });
 
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: { orderStatus: orderStatus as any },
+      include: {
+        customer: {
+          select: { email: true, name: true },
+        },
+      },
+    });
+
+    // Kirim email notifikasi ke customer
+    try {
+      if (updatedOrder.customer?.email) {
+        await sendOrderStatusUpdateEmail(updatedOrder.customer.email, {
+          customerName: updatedOrder.customer.name,
+          invoiceNumber: updatedOrder.invoiceNumber,
+          orderStatus: updatedOrder.orderStatus,
+          orderId: updatedOrder.id,
+        });
+      }
+    } catch (emailError) {
+      console.error("Gagal mengirim status terbaru pada pesanan:", emailError);
+    }
+
     res.status(200).json({
       success: true,
       message: "Status pesanan diperbarui.",
-      order,
+      order: updatedOrder,
     });
   } catch (error) {
     console.error("Anda tidak dapat memperbarui status pesanan:", error);

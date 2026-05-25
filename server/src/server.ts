@@ -11,8 +11,16 @@ dotenv.config();
 
 import prisma from "./lib/database";
 import { setupSocketIO } from "./lib/socket";
+import {
+  logErrorMiddleware,
+  logRequest,
+} from "./middlewares/logging.middleware";
+import { trackActivity } from "./middlewares/activity.middleware";
+import { requestLogger } from "./lib/logger";
 
+import monitoringRoutes from "./routes/monitoring.route";
 import authRoutes from "./routes/auth.route";
+import profileRoutes from "./routes/profile.route";
 import adminRoutes from "./routes/admin.route";
 import driverRoutes from "./routes/driver.route";
 import storeRoutes from "./routes/store.route";
@@ -25,6 +33,8 @@ import reviewRoutes from "./routes/review.route";
 import orderRoutes from "./routes/order.route";
 import promoRoutes from "./routes/promo.route";
 import paymentRoutes from "./routes/payment.route";
+import notificationRoutes from "./routes/notification.route";
+import analyticRoutes from "./routes/analytic.route";
 
 const app = express();
 const limiter = rateLimit({
@@ -47,12 +57,17 @@ app.use(
 
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+app.use(logRequest);
+app.use(requestLogger);
+app.use(trackActivity);
 
 app.use("/api", limiter);
 
 app.use("/api/payments", paymentRoutes);
 
+app.use("/api/monitoring", monitoringRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/stores", storeRoutes);
@@ -64,6 +79,8 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/promos", promoRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/analytics", analyticRoutes);
 
 app.get("/api/heart", (req, res) => {
   res.status(200).json({
@@ -90,6 +107,8 @@ app.use(
     });
   },
 );
+
+app.use(logErrorMiddleware);
 
 const PORT = process.env.PORT || 3000;
 

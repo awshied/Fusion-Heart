@@ -4,6 +4,7 @@ import prisma from "../lib/database";
 import { comparePassword, hashPassword } from "../lib/hash.utils";
 import { generateToken } from "../lib/jwt.utils";
 import { sendResetPasswordEmail } from "../lib/email";
+import { logError, logInfo, logWarn } from "../lib/logger";
 
 // Registrasi atau Membuat Akun Baru
 export const register = async (req: Request, res: Response) => {
@@ -80,12 +81,15 @@ export const login = async (req: Request, res: Response) => {
         .json({ error: "Email dan password tidak boleh kosong." });
     }
 
+    logInfo(`Pengguna dengan email ${email} mencoba login.`);
+
     // Cari User
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
+      logWarn(`Pengguna dengan email ${email} tidak ditemukan.`);
       return res
         .status(401)
         .json({ error: "Email atau password tidak valid." });
@@ -102,6 +106,10 @@ export const login = async (req: Request, res: Response) => {
 
     // Generate Token
     const token = generateToken(user.id, user.role);
+
+    logInfo(
+      `Pengguna dengan ID ${user.id} berhasil login sebagai ${user.role}.`,
+    );
 
     res.status(200).json({
       message: "Yeay, Anda berhasil login.",

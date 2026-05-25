@@ -5,6 +5,7 @@ import {
   getCartExpiration,
   isCartExpired,
 } from "../lib/cart";
+import { sendOrderConfirmationEmail } from "../lib/email";
 
 // Helper: Validasi ID
 const getStringParam = (
@@ -431,6 +432,27 @@ export const checkoutFromCart = async (req: Request, res: Response) => {
         where: { id: cart.id },
         data: { storeId: null },
       });
+
+      // Kirim email konfirmasi order
+      try {
+        const customer = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true, name: true },
+        });
+
+        if (customer?.email) {
+          await sendOrderConfirmationEmail(customer.email, {
+            customerName: customer.name,
+            invoiceNumber: newOrder.invoiceNumber,
+            orderType: orderType,
+            paymentMethod: paymentMethod,
+            total: total,
+            orderId: newOrder.id,
+          });
+        }
+      } catch (emailError) {
+        console.error("Gagal mengirim konfirmasi melalui email:", emailError);
+      }
 
       return newOrder;
     });
