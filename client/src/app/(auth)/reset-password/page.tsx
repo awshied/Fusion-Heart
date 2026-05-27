@@ -3,15 +3,16 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
-import { Lock, KeyRound } from "lucide-react";
+import { Lock, KeyRound, LogIn } from "lucide-react";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import axiosInstance from "@/lib/axios";
 import FloatingInput from "@/components/common/FloatingInput";
-import Button from "@/components/common/Button";
 import LoadingProgress from "@/components/common/LoadingProgress";
 import PasswordStrength from "@/components/shared/layouts/PasswordStrength";
+import ThemeSwitcher from "@/components/common/ThemeSwitcher";
 
 interface AxiosError {
   response?: {
@@ -23,11 +24,11 @@ interface AxiosError {
 
 const resetPasswordSchema = z
   .object({
-    newPassword: z.string().min(6, "Password minimal 6 karakter"),
+    newPassword: z.string().min(8, "Password minimal 8 karakter."),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Password tidak cocok",
+    message: "Password tidak cocok.",
     path: ["confirmPassword"],
   });
 
@@ -92,13 +93,13 @@ const ResetPasswordContent = () => {
         <p className="text-base-content/60">
           Link reset password tidak valid atau sudah kadaluarsa.
         </p>
-        <Button
-          variant="outline"
+
+        <button
+          className="btn btn-outline btn-md btn-block transition-all duration-200"
           onClick={() => router.push("/forgot-password")}
-          fullWidth
         >
-          Kirim Ulang Link Reset
-        </Button>
+          <span className="font-semibold">Kirim Ulang Link Reset</span>
+        </button>
       </div>
     );
   }
@@ -114,63 +115,87 @@ const ResetPasswordContent = () => {
           Password Anda telah berhasil diubah. Silakan login dengan password
           baru Anda.
         </p>
-        <Button
-          variant="outline"
+        <button
+          className="btn btn-outline btn-md btn-block transition-all duration-200"
           onClick={() => router.push("/login")}
-          fullWidth
         >
-          Kembali ke Login
-        </Button>
+          <span className="font-semibold">Kembali ke Login</span>
+        </button>
       </div>
     );
   }
 
   return (
     <>
-      <LoadingProgress isLoading={isLoading} message="Mereset password..." />
+      <div
+        className="min-h-screen flex flex-col bg-base-200"
+        suppressHydrationWarning
+      >
+        <div className="flex-1 flex items-center justify-center px-4 py-8">
+          <div className="w-full max-w-xl">
+            <div className="card bg-base-100 shadow-2xl relative">
+              <div className="absolute top-4 right-4">
+                <ThemeSwitcher />
+              </div>
+              <div className="card-body">
+                <LoadingProgress
+                  isLoading={isLoading}
+                  message="Mereset password..."
+                />
+                <div className="flex flex-col items-center mb-4">
+                  <LogIn size={46} />
+                  <h1 className="text-2xl font-extrabold text-base-content text-center font-poppins mt-4">
+                    Bikin Ulang Password
+                  </h1>
+                  <p className="text-sm font-semibold text-base-content/70 text-center font-mona mt-2">
+                    Masukkan password baru untuk akun Anda.
+                  </p>
+                  <div className="divider my-2" />
+                </div>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <FloatingInput
+                    id="newPassword"
+                    name="newPassword"
+                    type="password"
+                    label="Password Baru"
+                    required
+                    icon={<Lock size={18} />}
+                    error={errors.newPassword?.message}
+                    {...register("newPassword")}
+                  />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="text-center mb-4">
-          <p className="text-sm text-base-content/60">
-            Masukkan password baru untuk akun Anda.
-          </p>
+                  <PasswordStrength password={watchedPassword} />
+
+                  <FloatingInput
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    label="Konfirmasi Password Baru"
+                    required
+                    icon={<Lock size={18} />}
+                    error={errors.confirmPassword?.message}
+                    {...register("confirmPassword")}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn btn-soft btn-md btn-block transition-all duration-200"
+                  >
+                    {isLoading ? (
+                      <span className="loading loading-spinner" />
+                    ) : (
+                      <div className="inline-flex flex-row items-center justify-center gap-2">
+                        <KeyRound size={18} />
+                        <span className="font-semibold">Reset Password</span>
+                      </div>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <FloatingInput
-          id="newPassword"
-          name="newPassword"
-          type="password"
-          label="Password Baru"
-          placeholder="Buat password baru"
-          required
-          icon={<Lock size={18} />}
-          error={errors.newPassword?.message}
-          {...register("newPassword")}
-        />
-
-        <PasswordStrength password={watchedPassword} />
-
-        <FloatingInput
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          label="Konfirmasi Password Baru"
-          placeholder="Ulangi password baru"
-          required
-          icon={<Lock size={18} />}
-          error={errors.confirmPassword?.message}
-          {...register("confirmPassword")}
-        />
-
-        <Button
-          type="submit"
-          isLoading={isLoading}
-          fullWidth
-          icon={<KeyRound size={18} />}
-        >
-          Reset Password
-        </Button>
-      </form>
+      </div>
     </>
   );
 };
@@ -181,7 +206,7 @@ const ResetPasswordPage = () => {
       fallback={
         <div className="text-center py-8">
           <div className="loader mx-auto"></div>
-          <p className="mt-4 text-base-content/60">Memuat...</p>
+          <p className="mt-4 text-base-content/70">Memuat...</p>
         </div>
       }
     >

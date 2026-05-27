@@ -15,11 +15,6 @@
   --font-mona: var(--font-mona-sans);
   --font-poppins: var(--font-poppins);
   --font-lobster: var(--font-lobster);
-
-  --color-primary: #e91e63;
-  --color-primary-focus: #c2185b;
-  --color-secondary: #795548;
-  --color-accent: #8d6e63;
 }
 
 ::-webkit-scrollbar {

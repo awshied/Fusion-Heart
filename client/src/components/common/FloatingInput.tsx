@@ -42,7 +42,6 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
       label,
       value,
       defaultValue,
-      placeholder,
       required = false,
       disabled = false,
       readOnly = false,
@@ -91,7 +90,6 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
       name,
       value: internalValue,
       defaultValue,
-      placeholder: placeholder || (isActive ? label : ""),
       required,
       disabled,
       readOnly,
@@ -99,19 +97,17 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
       onFocus: handleFocus,
       onBlur: handleBlur,
       className: `
-        w-full px-3 py-3 rounded-lg border-2 bg-white dark:bg-gray-800
-        transition-all duration-200 outline-none
+        w-full px-3 py-3 rounded-lg border-2 bg-base-300 dark:bg-base-200 transition-all duration-300 outline-none
         ${isTextarea ? "resize-none" : ""}
         ${icon ? "pl-10" : ""}
-        ${isActive ? "pt-5 pb-2" : "py-3"}
         ${
           error
-            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+            ? "border-error focus:border-error focus:ring-error/20"
             : success
               ? "border-green-500 focus:border-green-500 focus:ring-green-500/20"
-              : "border-gray-300 dark:border-gray-600 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+              : "border-base-content/50 focus:border-base-content focus:ring-2 focus:ring-base-content/20"
         }
-        ${disabled ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""}
+        ${disabled ? "opacity-70 cursor-not-allowed" : ""}
       `,
     };
 
@@ -120,20 +116,20 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
         <div className="relative">
           <motion.label
             htmlFor={id}
-            className={`absolute left-3 transition-all cursor-text z-10 ${
-              isActive
-                ? "-top-2.5 text-xs px-1 bg-white dark:bg-gray-800 text-pink-600"
-                : "top-3 text-gray-500 dark:text-gray-400"
-            } ${disabled ? "opacity-50" : ""} ${error ? "text-red-500" : ""}`}
+            className={`absolute transition-all top-3 font-semibold left-10 cursor-text z-10 ${
+              isActive ? "text-transparent" : "text-base-content"
+            } ${disabled ? "opacity-50" : ""} ${error ? "text-error" : ""}`}
             initial={false}
-            animate={{
-              y: isActive ? -12 : 0,
-              scale: isActive ? 0.85 : 1,
-            }}
             onClick={() => document.getElementById(id)?.focus()}
           >
             {label}
-            {required && <span className="text-red-500 ml-0.5">*</span>}
+            {required && (
+              <span
+                className={`${isActive ? "text-transparent" : "text-base-content ml-0.5"}`}
+              >
+                *
+              </span>
+            )}
           </motion.label>
 
           {isTextarea ? (
@@ -151,7 +147,7 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
           )}
 
           {icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 ">
               {icon}
             </div>
           )}
@@ -160,20 +156,20 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content hover:text-base-content/70 z-10"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           )}
 
           {success && !error && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content">
               <Check size={18} />
             </div>
           )}
 
           {error && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-error">
               <X size={18} />
             </div>
           )}
@@ -185,7 +181,7 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex items-center gap-1 mt-1 text-red-500 text-sm"
+              className="flex items-center gap-1 mt-1 text-error text-sm"
             >
               <AlertCircle size={14} />
               <span>{error}</span>
@@ -199,7 +195,7 @@ const FloatingInput = forwardRef<InputElement, FloatingInputProps>(
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex items-center gap-1 mt-1 text-green-500 text-sm"
+              className="flex items-center gap-1 mt-1 text-base-content text-sm"
             >
               <Check size={14} />
               <span>Valid</span>

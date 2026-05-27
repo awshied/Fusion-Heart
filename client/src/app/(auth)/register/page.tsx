@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import axiosInstance from "@/lib/axios";
 import toast from "react-hot-toast";
-import { User, Mail, Lock, Phone, UserPlus } from "lucide-react";
-import FloatingInput from "@/components/common/FloatingInput";
-import Button from "@/components/common/Button";
-import PasswordStrength from "@/components/shared/layouts/PasswordStrength";
+import z from "zod";
+import { User, Mail, Lock, Phone, UserPlus, LogIn } from "lucide-react";
+
+import axiosInstance from "@/lib/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
 import LoadingProgress from "@/components/common/LoadingProgress";
+import ThemeSwitcher from "@/components/common/ThemeSwitcher";
+import FloatingInput from "@/components/common/FloatingInput";
+import PasswordStrength from "@/components/shared/layouts/PasswordStrength";
 
 interface AxiosError {
   response?: {
@@ -26,7 +28,7 @@ const registerSchema = z
     name: z.string().min(2, "Nama minimal 2 karakter."),
     email: z.string().email("Email tidak valid."),
     phone: z.string().optional(),
-    password: z.string().min(6, "Password minimal 6 karakter."),
+    password: z.string().min(8, "Password minimal 8 karakter."),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -64,7 +66,7 @@ const RegisterPage = () => {
 
       if (response.data.success) {
         toast.success(
-          "Registrasi berhasil! Silakan login untuk mengakses aplikasi kami.",
+          "Yeay, Anda telah berhasil registrasi akun di website kami.",
         );
         router.push("/login");
       }
@@ -78,79 +80,128 @@ const RegisterPage = () => {
 
   return (
     <>
-      <LoadingProgress isLoading={isLoading} message="Membuat akun baru..." />
+      <div
+        className="min-h-screen flex flex-col bg-base-200"
+        suppressHydrationWarning
+      >
+        <div className="flex-1 flex items-center justify-center px-4 py-8">
+          <div className="w-full max-w-2xl">
+            <div className="card bg-base-100 shadow-2xl relative">
+              <div className="absolute top-4 right-4">
+                <ThemeSwitcher />
+              </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <FloatingInput
-          id="name"
-          name="name"
-          type="text"
-          label="Nama Lengkap"
-          placeholder="John Doe"
-          required
-          icon={<User size={18} />}
-          error={errors.name?.message}
-          {...register("name")}
-        />
+              <div className="card-body">
+                <LoadingProgress
+                  isLoading={isLoading}
+                  message="Membuat akun baru..."
+                />
 
-        <FloatingInput
-          id="email"
-          name="email"
-          type="email"
-          label="Email Address"
-          placeholder="user@example.com"
-          required
-          icon={<Mail size={18} />}
-          error={errors.email?.message}
-          {...register("email")}
-        />
+                <div className="flex flex-col items-center mb-4">
+                  <LogIn size={46} />
+                  <h1 className="text-2xl font-extrabold text-base-content text-center font-poppins mt-4">
+                    Registrasi Akun
+                  </h1>
+                  <p className="text-sm font-semibold text-base-content/70 text-center font-mona mt-2">
+                    Mohon agar Anda mengisi semua form yang tersedia untuk
+                    proses pembuatan akun baru.
+                  </p>
+                  <div className="divider my-2" />
+                </div>
 
-        <FloatingInput
-          id="phone"
-          name="phone"
-          type="tel"
-          label="Nomor Telepon (Opsional)"
-          placeholder="08123456789"
-          icon={<Phone size={18} />}
-          error={errors.phone?.message}
-          {...register("phone")}
-        />
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FloatingInput
+                      id="name"
+                      name="name"
+                      type="text"
+                      label="Nama Lengkap"
+                      required
+                      icon={<User size={18} />}
+                      error={errors.name?.message}
+                      {...register("name")}
+                    />
 
-        <FloatingInput
-          id="password"
-          name="password"
-          type="password"
-          label="Password"
-          placeholder="Buat password"
-          required
-          icon={<Lock size={18} />}
-          error={errors.password?.message}
-          {...register("password")}
-        />
+                    <FloatingInput
+                      id="email"
+                      name="email"
+                      type="email"
+                      label="Email"
+                      required
+                      icon={<Mail size={18} />}
+                      error={errors.email?.message}
+                      {...register("email")}
+                    />
+                  </div>
 
-        <PasswordStrength password={watchedPassword} />
+                  <FloatingInput
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    label="Nomor Telepon (Opsional)"
+                    icon={<Phone size={18} />}
+                    error={errors.phone?.message}
+                    {...register("phone")}
+                  />
 
-        <FloatingInput
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          label="Konfirmasi Password"
-          placeholder="Ulangi password"
-          required
-          icon={<Lock size={18} />}
-          error={errors.confirmPassword?.message}
-          {...register("confirmPassword")}
-        />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FloatingInput
+                      id="password"
+                      name="password"
+                      type="password"
+                      label="Password"
+                      required
+                      icon={<Lock size={18} />}
+                      error={errors.password?.message}
+                      {...register("password")}
+                    />
 
-        <Button
-          type="submit"
-          isLoading={isLoading}
-          fullWidth
-          icon={<UserPlus size={18} />}
-        >
-          Daftar Sekarang
-        </Button>
-      </form>
+                    <PasswordStrength password={watchedPassword} />
+
+                    <FloatingInput
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      label="Ulangi Password"
+                      required
+                      icon={<Lock size={18} />}
+                      error={errors.confirmPassword?.message}
+                      {...register("confirmPassword")}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn btn-soft btn-md btn-block transition-all duration-200"
+                  >
+                    {isLoading ? (
+                      <span className="loading loading-spinner" />
+                    ) : (
+                      <div className="inline-flex flex-row items-center justify-center gap-2">
+                        <UserPlus size={18} />
+                        <span className="font-semibold">Daftar Sekarang</span>
+                      </div>
+                    )}
+                  </button>
+                </form>
+
+                <div className="flex items-center justify-center mt-6 pt-3 border-t border-base-content">
+                  <p className="text-sm text-center text-base-content/70 font-medium">
+                    Sudah memiliki akun?
+                    <Link
+                      href="/login"
+                      className="text-base-content font-bold hover:underline ml-0.5"
+                    >
+                      Login
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

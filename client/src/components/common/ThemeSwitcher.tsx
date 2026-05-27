@@ -41,9 +41,9 @@ export default function ThemeSwitcher() {
       aria-label="Toggle theme"
     >
       {theme === "light" ? (
-        <Moon className="w-5 h-5" />
+        <Moon className="w-6 h-6" />
       ) : (
-        <Sun className="w-5 h-5" />
+        <Sun className="w-6 h-6" />
       )}
     </button>
   );
