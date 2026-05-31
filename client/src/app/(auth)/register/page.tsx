@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import z from "zod";
-import { User, Mail, Lock, Phone, UserPlus, LogIn } from "lucide-react";
+import { User, Mail, Lock, Phone, UserPlus } from "lucide-react";
 
 import axiosInstance from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -85,7 +86,7 @@ const RegisterPage = () => {
         suppressHydrationWarning
       >
         <div className="flex-1 flex items-center justify-center px-4 py-8">
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-3xl">
             <div className="card bg-base-100 shadow-2xl relative">
               <div className="absolute top-4 right-4">
                 <ThemeSwitcher />
@@ -98,7 +99,12 @@ const RegisterPage = () => {
                 />
 
                 <div className="flex flex-col items-center mb-4">
-                  <LogIn size={46} />
+                  <Image
+                    src="/assets/logo.png"
+                    alt="logo"
+                    width={82}
+                    height={82}
+                  />
                   <h1 className="text-2xl font-extrabold text-base-content text-center font-poppins mt-4">
                     Registrasi Akun
                   </h1>
@@ -109,7 +115,7 @@ const RegisterPage = () => {
                   <div className="divider my-2" />
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
                   <div className="grid grid-cols-2 gap-4">
                     <FloatingInput
                       id="name"
@@ -144,7 +150,7 @@ const RegisterPage = () => {
                     {...register("phone")}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 mt-2">
                     <FloatingInput
                       id="password"
                       name="password"

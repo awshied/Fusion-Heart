@@ -3,9 +3,10 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { Lock, KeyRound, LogIn } from "lucide-react";
+import { Lock, KeyRound } from "lucide-react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "@/lib/axios";
@@ -143,7 +144,12 @@ const ResetPasswordContent = () => {
                   message="Mereset password..."
                 />
                 <div className="flex flex-col items-center mb-4">
-                  <LogIn size={46} />
+                  <Image
+                    src="/assets/logo.png"
+                    alt="logo"
+                    width={82}
+                    height={82}
+                  />
                   <h1 className="text-2xl font-extrabold text-base-content text-center font-poppins mt-4">
                     Bikin Ulang Password
                   </h1>

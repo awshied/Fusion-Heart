@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { LogIn, Mail, Send } from "lucide-react";
+import { Mail, Send } from "lucide-react";
 
 import axiosInstance from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -93,7 +94,12 @@ const ForgotPasswordPage = () => {
 
               <div className="card-body">
                 <div className="flex flex-col items-center mb-4">
-                  <LogIn size={46} />
+                  <Image
+                    src="/assets/logo.png"
+                    alt="logo"
+                    width={82}
+                    height={82}
+                  />
                   <h1 className="text-2xl font-extrabold text-base-content text-center font-poppins mt-4">
                     Lupa Password
                   </h1>
